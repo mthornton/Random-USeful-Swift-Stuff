@@ -1,0 +1,69 @@
+import Foundation
+
+
+//https://cdn.jsdelivr.net/gh/fawazahmed0/currency-api@1/latest/currencies/nzd.json
+//https://www.boredapi.com/api/activity
+
+
+struct Activity: Codable {
+    let activity: String
+    let type: String
+    let participants: Int
+    let price: Double
+    let link: String
+    let key: String
+    let accessibility: Double
+}
+
+
+// URL for the API
+//private var urlString = "https://www.boredapi.com/api/activity"
+private var urlString = "https://cdn.jsdelivr.net/gh/fawazahmed0/currency-api@1/latest/currencies.json"
+
+// network session, you can customize it but not really needed for this course, the defaults are fine.  You can customize things like timeouts and security
+let session = URLSession.shared
+
+// create a URL from the string we have
+if let url = URL(string: urlString) {
+    
+    // a task is the network call, it takes a URL and a coluse to execute once the call is complete
+    let task = session.dataTask(with: url) { data, response, error in
+        
+        // error check, if we got somethign in the error or nothing in the data we have a problem
+        if error != nil || data == nil {
+            print("error making network call")
+            return
+        }
+        
+        // also check the response code, anything in the 200s is an error response from the server
+        guard let response = response as? HTTPURLResponse, (200...299).contains(response.statusCode) else {
+            print("bad response code")
+            return
+        }
+        
+        // we know we have data (we checked above) but still need to unwrap the optional var
+        if let data = data {
+            let jsonDecoder = JSONDecoder()
+            
+            do {
+                // this is not needed, but is handy for debugging
+                if let s = String(data: data, encoding: .utf8) {
+                    print(s)
+                }
+                else {
+                    print("unable to convert data to string")
+                }
+                
+                // decode the data into our object
+                var activity = try jsonDecoder.decode([String:String].self, from: data)
+                
+                print("\(activity)")
+            }
+            catch let error {
+                print("error with json: \(error.localizedDescription)")
+            }
+        }
+    }
+    
+    task.resume()
+}
